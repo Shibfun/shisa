@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shisa Mining</title>
+    <link rel="icon" type="image/png" href="https://shibarium.fun/images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #121212;
+            color: #E0E0E0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 700;
+            color: #FF8C00;
+            letter-spacing: 1px;
+        }
+        .connect-section {
+            margin-bottom: 16px;
+        }
+        .connect-section button {
+            padding: 10px 24px;
+            background: linear-gradient(45deg, #FF8C00, #FFA500);
+            color: #FFF;
+            border: none;
+            border-radius: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s, background 0.3s;
+        }
+        .connect-section button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #FFA500, #FF8C00);
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+        .card {
+            background: #1E1E1E;
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #252525;
+            border-bottom: 1px solid #333;
+        }
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            flex-grow: 1;
+            color: #E0E0E0;
+        }
+        .card-header .copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            position: relative;
+        }
+        .card-header .copy-button img {
+            width: 18px;
+            height: 18px;
+            filter: invert(1);
+        }
+        .card-header .copy-button .tooltip {
+            visibility: hidden;
+            background: #FF8C00;
+            color: #FFF;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            position: absolute;
+            top: -30px;
+            right: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .card-header .copy-button.copied .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .card-content {
+            padding: 16px;
+            flex-grow: 1;
+        }
+        .card-content h4 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #FF8C00;
+        }
+        .card-content p.description {
+            font-size: 0.9rem;
+            color: #B0B0B0;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .action-section {
+            padding: 16px;
+            border-top: 1px solid #333;
+        }
+        .action-box {
+            background: #252525;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .action-box h5 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #FF8C00;
+            margin-bottom: 12px;
+        }
+        .action-box input {
+            width: 100%;
+            padding: 10px;
+            background: #1E1E1E;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #E0E0E0;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .action-box .action-button {
+            padding: 10px;
+            background: linear-gradient(45deg, #FF8C00, #FFA500);
+            color: #FFF;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            font-size: 0.9rem;
+            position: relative;
+            transition: background 0.3s;
+            margin-top: 8px;
+        }
+        .action-box .action-button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .action-box .action-button:hover:not(:disabled) {
+            background: linear-gradient(45deg, #FFA500, #FF8C00);
+        }
+        .action-box .action-button .spinner {
+            display: none;
+            border: 2px solid #FFF;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .action-box .action-button.loading .spinner {
+            display: block;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            color: #E0E0E0;
+            margin-top: 16px;
+        }
+        .info-table th, .info-table td {
+            padding: 8px;
+            border: 1px solid #333;
+            text-align: left;
+        }
+        .info-table th {
+            background: #252525;
+            color: #FF8C00;
+        }
+        .nft-list {
+            margin-top: 16px;
+            background: #252525;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .nft-list h5 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #FF8C00;
+            margin-bottom: 8px;
+        }
+        .nft-list ul {
+            list-style: none;
+        }
+        .nft-list li {
+            padding: 4px 0;
+            font-size: 0.85rem;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #E0E0E0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #FF8C00;
+            color: #FFF;
+        }
+        .pagination button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .global-spinner {
+            border: 4px solid #FF8C00;
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 24px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            font-size: 0.9rem;
+            color: #FF8C00;
+            text-align: center;
+            margin: 12px 0;
+        }
+        .footer {
+            font-size: 0.8rem;
+            color: #B0B0B0;
+            text-align: center;
+            margin-top: auto;
+            padding: 16px;
+        }
+        .footer a {
+            color: #FF8C00;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer a:hover {
+            color: #FFA500;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .card {
+                max-width: 100%;
+            }
+            .card-header h3 {
+                font-size: 1rem;
+            }
+            .card-content h4 {
+                font-size: 1.2rem;
+            }
+            .card-content p.description {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Shisa Mining</h1>
+    </div>
+    <div class="connect-section">
+        <button id="connectWalletButton">Connect Wallet</button>
+    </div>
+    <div id="searchStatus" class="status"></div>
+    <div class="global-spinner" id="globalSpinner"></div>
+    <div class="container">
+        <div class="card" id="actionCard"></div>
+    </div>
+    <div class="footer">
+        Powered by <a href="https://shibarium.shib.io/" target="_blank">Shibarium</a> | ShibClub © 2025
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        let web3, account;
+        const contractAddress = "0xae542Df259a2D35D0b27080f169A13e6C3637D06";
+        const nftContractAddress = "0xB33012feB12D590f4ee9B0D9999e95C30303A209";
+        const shibarium = {
+            chainId: "0x6d",
+            chainName: "Shibarium",
+            nativeCurrency: { name: "BONE", symbol: "BONE", decimals: 18 },
+            rpcUrls: ["https://rpc.shibrpc.com", "https://www.shibrpc.com"],
+            blockExplorerUrls: ["https://shibariumscan.io"]
+        };
+        const contractAbi = [
+            {"inputs":[{"internalType":"uint256[]","name":"nftIds","type":"uint256[]"}],"name":"verifyNFT","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"claimRewards","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getVerifiedNFTs","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getVerifiedNFTCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getAddressInfo","outputs":[{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"verifiedNFTCount","type":"uint256"},{"internalType":"uint256","name":"pendingRewards","type":"uint256"},{"internalType":"uint256","name":"lastClaimBlock","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"page","type":"uint256"},{"internalType":"uint256","name":"pageSize","type":"uint256"}],"name":"getAllVerifiedNFTs","outputs":[{"components":[{"internalType":"address","name":"verifier","type":"address"},{"internalType":"uint256","name":"nftId","type":"uint256"}],"internalType":"struct Shisa.VerifiedNFT[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"getAllVerifiedNFTsCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+        ];
+        const nftContractAbi = [
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"tokenOfOwnerByIndex","outputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"stateMutability":"view","type":"function"}
+        ];
+
+        function shortenAddress(address) {
+            return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "0x...";
+        }
+
+        function showStatus(message, isError = false) {
+            const status = document.getElementById("searchStatus");
+            status.innerText = message;
+            status.style.color = isError ? "#FF4444" : "#FF8C00";
+            setTimeout(() => { status.innerText = ""; }, 5000);
+        }
+
+        async function tryInitializeWeb3() {
+            for (const rpc of shibarium.rpcUrls) {
+                try {
+                    web3 = new Web3(rpc);
+                    await web3.eth.getBlockNumber();
+                    return true;
+                } catch (e) {
+                    console.warn(`RPC ${rpc} failed: ${e.message}`);
+                }
+            }
+            return false;
+        }
+
+        async function connectWallet() {
+            try {
+                if (!window.ethereum) {
+                    showStatus("Please install MetaMask.", true);
+                    return;
+                }
+                document.getElementById("searchStatus").innerText = "Connecting...";
+                document.getElementById("globalSpinner").style.display = "block";
+                web3 = new Web3(window.ethereum);
+                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                if (!accounts.length) {
+                    showStatus("Please unlock wallet.", true);
+                    return;
+                }
+                account = accounts[0];
+                const chainId = await web3.eth.getChainId();
+                if (Number(chainId) !== 109) {
+                    try {
+                        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: shibarium.chainId }] });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({ method: "wallet_addEthereumChain", params: [shibarium] });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                document.getElementById("connectWalletButton").innerText = shortenAddress(account);
+                showStatus("Connected to Shibarium");
+                await loadActionCard();
+            } catch (error) {
+                showStatus(`Connection failed: ${error.message}`, true);
+                resetUI();
+            } finally {
+                document.getElementById("globalSpinner").style.display = "none";
+            }
+        }
+
+        function resetUI() {
+            document.getElementById("connectWalletButton").innerText = "Connect Wallet";
+            document.getElementById("searchStatus").innerText = "";
+            const actionButton = document.querySelector(".action-button");
+            if (actionButton) actionButton.disabled = true;
+        }
+
+        async function getUserNFTs() {
+            if (!web3 || !account) {
+                showStatus("Please connect wallet.", true);
+                return [];
+            }
+            try {
+                const nftContract = new web3.eth.Contract(nftContractAbi, nftContractAddress);
+                const balance = await nftContract.methods.balanceOf(account).call();
+                const tokenIds = [];
+                for (let i = 0; i < balance; i++) {
+                    const tokenId = await nftContract.methods.tokenOfOwnerByIndex(account, i).call();
+                    tokenIds.push(tokenId);
+                }
+                return tokenIds;
+            } catch (e) {
+                showStatus(`Failed to fetch NFTs: ${e.message}`, true);
+                return [];
+            }
+        }
+
+        async function loadActionCard() {
+            const status = document.getElementById("searchStatus");
+            const card = document.getElementById("actionCard");
+            const spinner = document.getElementById("globalSpinner");
+            try {
+                status.innerText = "Loading data...";
+                spinner.style.display = "block";
+                if (!web3 && !await tryInitializeWeb3()) {
+                    showStatus("Failed to connect to Shibarium.", true);
+                    return;
+                }
+                const contract = new web3.eth.Contract(contractAbi, contractAddress);
+                let userInfo = { balance: "0", verifiedNFTCount: "0", pendingRewards: "0", lastClaimBlock: "0" };
+                let verifiedNFTs = [];
+                let allVerifiedNFTs = [];
+                let totalVerifiedNFTsCount = 0;
+                const pageSize = 10;
+                let currentPage = 0;
+                if (account) {
+                    userInfo = await contract.methods.getAddressInfo(account).call();
+                    verifiedNFTs = await contract.methods.getVerifiedNFTs(account).call();
+                    totalVerifiedNFTsCount = await contract.methods.getAllVerifiedNFTsCount().call();
+                    if (totalVerifiedNFTsCount > 0) {
+                        allVerifiedNFTs = await contract.methods.getAllVerifiedNFTs(currentPage, pageSize).call();
+                    }
+                }
+                const balanceDisplay = parseFloat(web3.utils.fromWei(userInfo.balance, "ether")).toFixed(2);
+                const pendingRewardsDisplay = parseFloat(web3.utils.fromWei(userInfo.pendingRewards, "ether")).toFixed(2);
+                const verifiedNFTsList = verifiedNFTs.length ? verifiedNFTs.map(nftId => `<li>NFT ID: ${nftId}</li>`).join("") : "<li>No verified NFTs</li>";
+                const allVerifiedNFTsList = allVerifiedNFTs.length ? allVerifiedNFTs.map(nft => `<li>Verifier: ${shortenAddress(nft.verifier)}, NFT ID: ${nft.nftId}</li>`).join("") : "<li>No verified NFTs</li>";
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>Shisa Contract</h3>
+                        <button class="copy-button" data-address="${contractAddress}">
+                            <img src="https://img.icons8.com/ios-filled/16/000000/contract.png" alt="Copy Contract">
+                            <span class="tooltip">Copied Contract</span>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <h4>Shisa Mining</h4>
+                        <p class="description">Verify your SIYCV2 NFTs to mine SHISA tokens on Shibarium. Each verified NFT earns 500 SHISA per block, up to 200 NFTs per address. Rewards are claimed automatically upon verification, and you can re-verify NFTs.</p>
+                    </div>
+                    <div class="action-section">
+                        <div class="action-box">
+                            <h5>Verify NFT</h5>
+                            <input type="text" id="nftIdInput" placeholder="Enter NFT IDs (comma-separated, e.g., 1,2,3)">
+                            <button class="action-button" id="autoFillNFTsButton" disabled>Auto Fill My NFTs</button>
+                            <button class="action-button" id="verifyNFTButton" disabled>Verify NFTs</button>
+                        </div>
+                        <div class="action-box">
+                            <h5>User Information</h5>
+                            <table class="info-table">
+                                <tr>
+                                    <th>Balance</th>
+                                    <td>${balanceDisplay} SHISA</td>
+                                </tr>
+                                <tr>
+                                    <th>Verified NFTs</th>
+                                    <td>${userInfo.verifiedNFTCount}</td>
+                                </tr>
+                                <tr>
+                                    <th>Pending Rewards</th>
+                                    <td>${pendingRewardsDisplay} SHISA</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Claim Block</th>
+                                    <td>${userInfo.lastClaimBlock}</td>
+                                </tr>
+                            </table>
+                            <div class="nft-list">
+                                <h5>Your Verified NFTs</h5>
+                                <ul>${verifiedNFTsList}</ul>
+                            </div>
+                        </div>
+                        <div class="action-box">
+                            <h5>All Verified NFTs</h5>
+                            <div class="nft-list">
+                                <ul id="allVerifiedNFTsList">${allVerifiedNFTsList}</ul>
+                            </div>
+                            <div class="pagination">
+                                <button id="prevPageButton" ${currentPage === 0 ? 'disabled' : ''}>Previous</button>
+                                <button id="nextPageButton" ${currentPage * pageSize + allVerifiedNFTs.length >= totalVerifiedNFTsCount ? 'disabled' : ''}>Next</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setupCardListeners(card, contract, totalVerifiedNFTsCount, pageSize);
+                showStatus();
+            } catch (e) {
+                showStatus(`Failed to load data: ${e.message}`, true);
+            } finally {
+                spinner.style.display = "none";
+            }
+        }
+
+        function setupCardListeners(card, contract, totalVerifiedNFTsCount, pageSize) {
+            let currentPage = 0;
+            card.querySelectorAll(".copy-button").forEach(button => {
+                button.addEventListener("click", () => {
+                    navigator.clipboard.writeText(button.dataset.address).then(() => {
+                        button.classList.add("copied");
+                        setTimeout(() => button.classList.remove("copied"), 1000);
+                    }).catch(() => showStatus("Failed to copy address.", true));
+                });
+            });
+
+            const nftIdInput = card.querySelector("#nftIdInput");
+            const verifyNFTButton = card.querySelector("#verifyNFTButton");
+            const autoFillNFTsButton = card.querySelector("#autoFillNFTsButton");
+
+            nftIdInput.addEventListener("input", () => {
+                const nftIds = nftIdInput.value.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id) && id >= 0);
+                verifyNFTButton.disabled = !account || nftIds.length === 0 || nftIds.length > 200;
+            });
+
+            autoFillNFTsButton.addEventListener("click", async () => {
+                autoFillNFTsButton.classList.add("loading");
+                autoFillNFTsButton.disabled = true;
+                try {
+                    const tokenIds = await getUserNFTs();
+                    if (tokenIds.length === 0) {
+                        showStatus("No NFTs found in your wallet.", true);
+                        return;
+                    }
+                    nftIdInput.value = tokenIds.join(",");
+                    verifyNFTButton.disabled = !account || tokenIds.length > 200;
+                    showStatus(`Found ${tokenIds.length} NFTs.`);
+                } catch (e) {
+                    showStatus(`Failed to auto-fill NFTs: ${e.message}`, true);
+                } finally {
+                    autoFillNFTsButton.classList.remove("loading");
+                    autoFillNFTsButton.disabled = !account;
+                }
+            });
+
+            verifyNFTButton.addEventListener("click", async () => await verifyNFT(card, contract));
+            card.querySelector("#prevPageButton").addEventListener("click", async () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    await updateAllVerifiedNFTs(card, contract, currentPage, pageSize, totalVerifiedNFTsCount);
+                }
+            });
+            card.querySelector("#nextPageButton").addEventListener("click", async () => {
+                if (currentPage * pageSize + pageSize < totalVerifiedNFTsCount) {
+                    currentPage++;
+                    await updateAllVerifiedNFTs(card, contract, currentPage, pageSize, totalVerifiedNFTsCount);
+                }
+            });
+
+            if (account) {
+                autoFillNFTsButton.disabled = false;
+            }
+        }
+
+        async function verifyNFT(card, contract) {
+            if (!web3 || !account) {
+                showStatus("Please connect wallet.", true);
+                return;
+            }
+            const nftIdInput = card.querySelector("#nftIdInput");
+            const nftIds = nftIdInput.value.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id) && id >= 0);
+            if (nftIds.length === 0) {
+                showStatus("Please enter valid NFT IDs.", true);
+                return;
+            }
+            if (nftIds.length > 200) {
+                showStatus("Cannot verify more than 200 NFTs.", true);
+                return;
+            }
+            const button = card.querySelector("#verifyNFTButton");
+            try {
+                button.classList.add("loading");
+                button.disabled = true;
+                showStatus("Verifying NFTs...");
+                await contract.methods.verifyNFT(nftIds).send({ from: account });
+                showStatus("NFTs verified successfully! Rewards claimed automatically.");
+                nftIdInput.value = "";
+                await loadActionCard();
+            } catch (e) {
+                const msg = e.code === 4001 ? "User rejected transaction." : 
+                            e.message.includes("Not NFT owner") ? "Verification failed: You do not own some NFTs." :
+                            e.message.includes("Max NFT verifications reached") ? "Verification failed: Exceeds 200 NFTs limit." :
+                            e.message.includes("revert") ? "Verification failed: Invalid input or contract error." : e.message;
+                showStatus(`Verification failed: ${msg}`, true);
+            } finally {
+                button.classList.remove("loading");
+                button.disabled = false;
+            }
+        }
+
+        async function updateAllVerifiedNFTs(card, contract, page, pageSize, totalCount) {
+            try {
+                const allVerifiedNFTs = await contract.methods.getAllVerifiedNFTs(page, pageSize).call();
+                const list = allVerifiedNFTs.length ? allVerifiedNFTs.map(nft => `<li>Verifier: ${shortenAddress(nft.verifier)}, NFT ID: ${nft.nftId}</li>`).join("") : "<li>No verified NFTs</li>";
+                card.querySelector("#allVerifiedNFTsList").innerHTML = list;
+                card.querySelector("#prevPageButton").disabled = page === 0;
+                card.querySelector("#nextPageButton").disabled = page * pageSize + allVerifiedNFTs.length >= totalCount;
+            } catch (e) {
+                showStatus(`Failed to load verified NFTs: ${e.message}`, true);
+            }
+        }
+
+        document.getElementById("connectWalletButton").addEventListener("click", connectWallet);
+        window.addEventListener("load", async () => {
+            if (!window.location.protocol.includes("http")) {
+                showStatus('Please run via server (e.g., "npx serve").', true);
+                return;
+            }
+            if (await tryInitializeWeb3()) {
+                await loadActionCard();
+            } else {
+                showStatus("Failed to connect to Shibarium.", true);
+            }
+        });
+
+        window.ethereum?.on("accountsChanged", async accounts => {
+            if (!accounts.length) {
+                resetUI();
+                showStatus("Wallet disconnected.", true);
+            } else {
+                account = accounts[0];
+                document.getElementById("connectWalletButton").innerText = shortenAddress(account);
+                await loadActionCard();
+            }
+        });
+
+        window.ethereum?.on("chainChanged", connectWallet);
+    </script>
+</body>
+</html>
