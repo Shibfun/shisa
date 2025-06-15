@@ -422,8 +422,8 @@
         function resetUI() {
             document.getElementById("connectWalletButton").innerText = "Connect Wallet";
             document.getElementById("searchStatus").innerText = "";
-            const actionButton = document.querySelector(".action-button");
-            if (actionButton) actionButton.disabled = true;
+            const actionButtons = document.querySelectorAll(".action-button");
+            actionButtons.forEach(button => button.disabled = true);
         }
 
         async function getUserNFTs() {
@@ -486,7 +486,7 @@
                     </div>
                     <div class="card-content">
                         <h4>Shisa Mining</h4>
-                        <p class="description">Verify your SIYCV2 NFTs to mine SHISA tokens on Shibarium. Each verified NFT earns 500 SHISA per block, up to 200 NFTs per address. Rewards are claimed automatically upon verification, and you can re-verify NFTs.</p>
+                        <p class="description">Verify your SIYCV2 NFTs to mine SHISA tokens on Shibarium. Each verified NFT earns 500 SHISA per block, up to 200 NFTs per address. Rewards are claimed automatically upon verification, or manually below. You can re-verify NFTs.</p>
                     </div>
                     <div class="action-section">
                         <div class="action-box">
@@ -494,6 +494,10 @@
                             <input type="text" id="nftIdInput" placeholder="Enter NFT IDs (comma-separated, e.g., 1,2,3)">
                             <button class="action-button" id="autoFillNFTsButton" disabled>Auto Fill My NFTs</button>
                             <button class="action-button" id="verifyNFTButton" disabled>Verify NFTs</button>
+                        </div>
+                        <div class="action-box">
+                            <h5>Claim Rewards</h5>
+                            <button class="action-button" id="claimRewardsButton" ${pendingRewardsDisplay > 0 ? '' : 'disabled'}>Claim Rewards (${pendingRewardsDisplay} SHISA)</button>
                         </div>
                         <div class="action-box">
                             <h5>User Information</h5>
@@ -555,6 +559,7 @@
             const nftIdInput = card.querySelector("#nftIdInput");
             const verifyNFTButton = card.querySelector("#verifyNFTButton");
             const autoFillNFTsButton = card.querySelector("#autoFillNFTsButton");
+            const claimRewardsButton = card.querySelector("#claimRewardsButton");
 
             nftIdInput.addEventListener("input", () => {
                 const nftIds = nftIdInput.value.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id) && id >= 0);
@@ -582,6 +587,7 @@
             });
 
             verifyNFTButton.addEventListener("click", async () => await verifyNFT(card, contract));
+            claimRewardsButton.addEventListener("click", async () => await claimRewards(card, contract));
             card.querySelector("#prevPageButton").addEventListener("click", async () => {
                 if (currentPage > 0) {
                     currentPage--;
@@ -630,6 +636,34 @@
                             e.message.includes("Max NFT verifications reached") ? "Verification failed: Exceeds 200 NFTs limit." :
                             e.message.includes("revert") ? "Verification failed: Invalid input or contract error." : e.message;
                 showStatus(`Verification failed: ${msg}`, true);
+            } finally {
+                button.classList.remove("loading");
+                button.disabled = false;
+            }
+        }
+
+        async function claimRewards(card, contract) {
+            if (!web3 || !account) {
+                showStatus("Please connect wallet.", true);
+                return;
+            }
+            const pendingRewards = (await contract.methods.getAddressInfo(account).call()).pendingRewards;
+            if (web3.utils.toBN(pendingRewards).isZero()) {
+                showStatus("No rewards to claim.", true);
+                return;
+            }
+            const button = card.querySelector("#claimRewardsButton");
+            try {
+                button.classList.add("loading");
+                button.disabled = true;
+                showStatus("Processing reward claim...");
+                await contract.methods.claimRewards().send({ from: account });
+                showStatus("Rewards claimed successfully!");
+                await loadActionCard();
+            } catch (e) {
+                const msg = e.code === 4001 ? "User rejected transaction." : 
+                            e.message.includes("revert") ? "No rewards available." : e.message;
+                showStatus(`Claim failed: ${msg}`, true);
             } finally {
                 button.classList.remove("loading");
                 button.disabled = false;
